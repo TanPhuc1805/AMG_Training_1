@@ -1,6 +1,7 @@
 using UnityEngine;
 using DG.Tweening;
 using System.Collections.Generic;
+using System.Linq;
 
 public class EnemyController : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class EnemyController : MonoBehaviour
     private Vector3 previousPosition;
     private bool hasAttacked = false;
     private bool hasMoved = false;
+
+    public EnemyType enemyType; // Sử dụng enum mới
 
     void Start()
     {
@@ -86,28 +89,67 @@ public class EnemyController : MonoBehaviour
 
     bool IsPositionOccupied(Vector3 position)
     {
-        Collider[] colliders = Physics.OverlapSphere(position, 0.1f);
-        foreach (Collider col in colliders)
-        {
-            if (col.CompareTag("Enemy")) // Nếu có Enemy khác ở vị trí đó, không di chuyển vào
-            {
-                return true;
-            }
-        }
-        return false;
+        return Physics.OverlapSphere(position, 0.1f).Any(col => col.CompareTag("Enemy"));
     }
 
     Vector3 GetRandomMoveStep()
     {
-        List<Vector3> possibleMoves = new List<Vector3>
-        {
-            new Vector3(1, 0, 0), new Vector3(-1, 0, 0), // Trái, phải
-            new Vector3(0, 0, 1), new Vector3(0, 0, -1), // Trên, dưới
-            new Vector3(1, 0, 1), new Vector3(-1, 0, -1), // Chéo lên phải, chéo xuống trái
-            new Vector3(-1, 0, 1), new Vector3(1, 0, -1) // Chéo lên trái, chéo xuống phải
-        };
+        List<Vector3> possibleMoves = new List<Vector3>();
 
-        // Xáo trộn danh sách để đảm bảo ngẫu nhiên
+        switch (enemyType)
+        {
+            case EnemyType.Rook:
+                possibleMoves.AddRange(GetLineMoves(new Vector3(1, 0, 0)));  
+                possibleMoves.AddRange(GetLineMoves(new Vector3(-1, 0, 0))); 
+                possibleMoves.AddRange(GetLineMoves(new Vector3(0, 0, 1)));  
+                possibleMoves.AddRange(GetLineMoves(new Vector3(0, 0, -1))); 
+                break;
+
+            case EnemyType.Bishop:
+                possibleMoves.AddRange(GetLineMoves(new Vector3(1, 0, 1)));  
+                possibleMoves.AddRange(GetLineMoves(new Vector3(-1, 0, -1))); 
+                possibleMoves.AddRange(GetLineMoves(new Vector3(-1, 0, 1)));  
+                possibleMoves.AddRange(GetLineMoves(new Vector3(1, 0, -1)));  
+                break;
+
+            case EnemyType.Knight:
+                possibleMoves = new List<Vector3>
+                {
+                    new Vector3(2, 0, 1), new Vector3(2, 0, -1),
+                    new Vector3(-2, 0, 1), new Vector3(-2, 0, -1),
+                    new Vector3(1, 0, 2), new Vector3(1, 0, -2),
+                    new Vector3(-1, 0, 2), new Vector3(-1, 0, -2)
+                };
+                break;
+
+            case EnemyType.Queen:
+                possibleMoves.AddRange(GetLineMoves(new Vector3(1, 0, 0)));  
+                possibleMoves.AddRange(GetLineMoves(new Vector3(-1, 0, 0))); 
+                possibleMoves.AddRange(GetLineMoves(new Vector3(0, 0, 1)));  
+                possibleMoves.AddRange(GetLineMoves(new Vector3(0, 0, -1))); 
+                possibleMoves.AddRange(GetLineMoves(new Vector3(1, 0, 1)));  
+                possibleMoves.AddRange(GetLineMoves(new Vector3(-1, 0, -1))); 
+                possibleMoves.AddRange(GetLineMoves(new Vector3(-1, 0, 1)));  
+                possibleMoves.AddRange(GetLineMoves(new Vector3(1, 0, -1)));  
+                break;
+
+            case EnemyType.Pawn:
+                possibleMoves.Add(new Vector3(0, 0, 1)); 
+                possibleMoves.Add(new Vector3(1, 0, 1)); 
+                possibleMoves.Add(new Vector3(-1, 0, 1)); 
+                break;
+
+            case EnemyType.King:
+                possibleMoves = new List<Vector3>
+                {
+                    new Vector3(1, 0, 0), new Vector3(-1, 0, 0),
+                    new Vector3(0, 0, 1), new Vector3(0, 0, -1),
+                    new Vector3(1, 0, 1), new Vector3(-1, 0, -1),
+                    new Vector3(-1, 0, 1), new Vector3(1, 0, -1)
+                };
+                break;
+        }
+
         possibleMoves.Shuffle();
 
         foreach (Vector3 move in possibleMoves)
@@ -115,15 +157,28 @@ public class EnemyController : MonoBehaviour
             Vector3 targetPosition = transform.position + move;
             if (IsInsideBoard(targetPosition) && !IsPositionOccupied(targetPosition))
             {
-                return move; // Chọn nước đi hợp lệ đầu tiên
+                return move;
             }
         }
 
-        return Vector3.zero; // Nếu không có nước đi hợp lệ, đứng yên
+        return Vector3.zero;
+    }
+
+    List<Vector3> GetLineMoves(Vector3 direction)
+    {
+        List<Vector3> moves = new List<Vector3>();
+        Vector3 position = transform.position + direction;
+
+        while (IsInsideBoard(position) && !IsPositionOccupied(position))
+        {
+            moves.Add(position - transform.position);
+            position += direction;
+        }
+        return moves;
     }
 }
 
-// Hàm xáo trộn danh sách (Fisher-Yates Shuffle)
+// Fisher-Yates Shuffle để xáo trộn danh sách
 public static class ListExtensions
 {
     private static System.Random rng = new System.Random();

@@ -153,7 +153,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tilePrefab: {fileID: 5885588018524040088, guid: 05e247f91e5091f4298dbf49dcb0242c, type: 3}
   kingPrefab: {fileID: 5837005470774714562, guid: 2db0f8aab61cdc4468d220bbbbe28e34, type: 3}
-  enemyPrefab: {fileID: 9153983412111244724, guid: 63926eeb939f426468f4de32b8bb3cc0, type: 3}
+  pawnPrefab: {fileID: 2733036922382256548, guid: f20ff0076c22e6e48bcc5db0b0ef9af2, type: 3}
+  rookPrefab: {fileID: 5172015733591473571, guid: 69899cba546828b4988db9453a7820ae, type: 3}
+  bishopPrefab: {fileID: 1389031652516063185, guid: 7ba349dc1b4e78a45b6ccefb6fc69b3e, type: 3}
+  knightPrefab: {fileID: 853013126103804420, guid: bc9a9998d10209d4ab79df3a15c87371, type: 3}
+  queenPrefab: {fileID: 9153983412111244724, guid: 63926eeb939f426468f4de32b8bb3cc0, type: 3}
+  enemyKingPrefab: {fileID: 5837005470774714562, guid: 2db0f8aab61cdc4468d220bbbbe28e34, type: 3}
   boardSize: 8
 --- !u!4 &311435547
 Transform:

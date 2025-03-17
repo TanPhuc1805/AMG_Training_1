@@ -6,9 +6,16 @@ public class BoardManager : MonoBehaviour
 {
     public GameObject tilePrefab;
     public GameObject kingPrefab;
-    public GameObject enemyPrefab;
-    public int boardSize = 8;
 
+    // Prefab riêng cho từng loại quân địch
+    public GameObject pawnPrefab;
+    public GameObject rookPrefab;
+    public GameObject bishopPrefab;
+    public GameObject knightPrefab;
+    public GameObject queenPrefab;
+    public GameObject enemyKingPrefab;
+
+    public int boardSize = 8;
     public static BoardManager Instance;
 
     private List<Vector3> availablePositions = new List<Vector3>();
@@ -65,16 +72,40 @@ public class BoardManager : MonoBehaviour
     }
 
     availablePositions.Remove(kingPosition);
-    king=myKing;
+    king = myKing;
 
-    // Đặt Enemy
-    for (int i = 0; i < 8; i++)
+    // Đặt số lượng quân địch ngẫu nhiên (từ 5 đến 10)
+    int enemyCount = Random.Range(5, 11);
+
+    for (int i = 0; i < enemyCount; i++)
     {
         Vector3 enemyPosition = GetRandomAvailablePosition();
+        EnemyType enemyType = GetRandomEnemyType();
+        GameObject enemyPrefab = GetPrefabByType(enemyType);
+
+        if (enemyPrefab == null)
+        {
+            Debug.LogError("Missing Prefab for: " + enemyType);
+            continue;
+        }
+
         GameObject enemy = Instantiate(enemyPrefab, enemyPosition, Quaternion.identity);
         enemy.tag = "Enemy";
-        enemy.GetComponent<Renderer>().material.color = Color.black;
-        enemy.AddComponent<EnemyController>();
+
+        // Đặt màu đen cho quân địch
+        Renderer enemyRenderer = enemy.GetComponent<Renderer>();
+        if (enemyRenderer != null)
+        {
+            enemyRenderer.material.color = Color.black;
+        }
+        else
+        {
+            Debug.LogError("Enemy prefab missing Renderer component: " + enemyType);
+        }
+
+        // Gán loại enemy
+        EnemyController enemyController = enemy.AddComponent<EnemyController>();
+        enemyController.enemyType = enemyType;
 
         // Thêm Collider và Rigidbody cho Enemy
         if (enemy.GetComponent<BoxCollider>() == null)
@@ -92,12 +123,35 @@ public class BoardManager : MonoBehaviour
         enemies.Add(enemy);
     }
 }
+
+
     Vector3 GetRandomAvailablePosition()
     {
         int index = Random.Range(0, availablePositions.Count);
         Vector3 position = availablePositions[index];
         availablePositions.RemoveAt(index);
         return new Vector3(position.x, 0.5f, position.z);
+    }
+
+    EnemyType GetRandomEnemyType()
+    {
+        // Lấy một loại quân ngẫu nhiên từ danh sách Enum
+        EnemyType[] enemyTypes = (EnemyType[])System.Enum.GetValues(typeof(EnemyType));
+        return enemyTypes[Random.Range(0, enemyTypes.Length)];
+    }
+
+    GameObject GetPrefabByType(EnemyType type)
+    {
+        switch (type)
+        {
+            case EnemyType.Pawn: return pawnPrefab;
+            case EnemyType.Rook: return rookPrefab;
+            case EnemyType.Bishop: return bishopPrefab;
+            case EnemyType.Knight: return knightPrefab;
+            case EnemyType.Queen: return queenPrefab;
+            case EnemyType.King: return enemyKingPrefab;
+            default: return null;
+        }
     }
 
     public void EndTurn()
@@ -135,5 +189,4 @@ public class BoardManager : MonoBehaviour
 
         EndTurn();
     }
-
 }
